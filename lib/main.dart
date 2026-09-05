@@ -56,10 +56,11 @@ class _PortfolioHomeState extends State<PortfolioHome> {
       appBar: AppBar(title: const Text('Portfolio')),
       body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Overview'),
           BottomNavigationBarItem(icon: Icon(Icons.trending_up), label: 'SwingPolio'),
-          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'MF/ETF Polio'),
+          BottomNavigationBarItem(icon: Icon(Icons.pie_chart), label: 'MF/ETF'),
           BottomNavigationBarItem(icon: Icon(Icons.upload_file), label: 'Importer'),
         ],
         currentIndex: _selectedIndex,
@@ -78,15 +79,20 @@ class OverviewTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalInv = sInv + mInv + eInv;
     final totalCur = sCur + mCur + eCur;
-    return Center(
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        Text('Total Invested: ₹$totalInv'),
-        Text('Current Value: ₹$totalCur'),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(child: ListTile(title: const Text('Total Invested'), trailing: Text('₹$totalInv'))),
+        Card(child: ListTile(title: const Text('Current Value'), trailing: Text('₹$totalCur'))),
         const SizedBox(height: 20),
-        Text('Stocks: ₹$sCur'),
-        Text('MF: ₹$mCur'),
-        Text('ETF: ₹$eCur'),
-      ]),
+        Card(
+          child: Column(children: [
+            ListTile(title: const Text('Stocks'), trailing: Text('₹$sCur')),
+            ListTile(title: const Text('MF'), trailing: Text('₹$mCur')),
+            ListTile(title: const Text('ETF'), trailing: Text('₹$eCur')),
+          ]),
+        ),
+      ],
     );
   }
 }
@@ -95,12 +101,12 @@ class SwingPolioTab extends StatelessWidget {
   final double invested, current;
   const SwingPolioTab(this.invested, this.current, {super.key});
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Text('Stocks Portfolio (Fyers)'),
-      Text('Invested: ₹$invested'),
-      Text('Current: ₹$current'),
-    ]),
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      Card(child: ListTile(title: const Text('Stocks Invested'), trailing: Text('₹$invested'))),
+      Card(child: ListTile(title: const Text('Stocks Current'), trailing: Text('₹$current'))),
+    ],
   );
 }
 
@@ -108,12 +114,15 @@ class MfEtfTab extends StatelessWidget {
   final double mInv, mCur, eInv, eCur;
   const MfEtfTab(this.mInv, this.mCur, this.eInv, this.eCur, {super.key});
   @override
-  Widget build(BuildContext context) => Center(
-    child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-      const Text('MF/ETF Portfolio'),
-      Text('MF Invested: ₹$mInv, Current: ₹$mCur'),
-      Text('ETF Invested: ₹$eInv, Current: ₹$eCur'),
-    ]),
+  Widget build(BuildContext context) => ListView(
+    padding: const EdgeInsets.all(16),
+    children: [
+      Card(child: ListTile(title: const Text('MF Invested'), trailing: Text('₹$mInv'))),
+      Card(child: ListTile(title: const Text('MF Current'), trailing: Text('₹$mCur'))),
+      const SizedBox(height: 10),
+      Card(child: ListTile(title: const Text('ETF Invested'), trailing: Text('₹$eInv'))),
+      Card(child: ListTile(title: const Text('ETF Current'), trailing: Text('₹$eCur'))),
+    ],
   );
 }
 
