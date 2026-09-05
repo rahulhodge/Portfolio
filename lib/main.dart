@@ -19,6 +19,23 @@ class PortfolioApp extends StatelessWidget {
   }
 }
 
+// --- Models ---
+class Holding {
+  final String name;
+  final double invested;
+  final double current;
+  Holding(this.name, this.invested, this.current);
+}
+
+class StockHolding {
+  final String broker;
+  final String name;
+  final double invested;
+  final double current;
+  StockHolding(this.broker, this.name, this.invested, this.current);
+}
+
+// --- Home ---
 class PortfolioHome extends StatefulWidget {
   const PortfolioHome({super.key});
   @override
@@ -32,7 +49,12 @@ class _PortfolioHomeState extends State<PortfolioHome> {
   double mfInvested = 0, mfCurrent = 0;
   double etfInvested = 0, etfCurrent = 0;
 
-  void _importData(double sInv, double sCur, double mInv, double mCur, double eInv, double eCur) {
+  List<Holding> mfHoldings = [];
+  List<Holding> etfHoldings = [];
+  List<StockHolding> stockHoldings = [];
+
+  void _importData(double sInv, double sCur, double mInv, double mCur, double eInv, double eCur,
+      List<Holding> mfList, List<Holding> etfList, List<StockHolding> stockList) {
     setState(() {
       stocksInvested = sInv;
       stocksCurrent = sCur;
@@ -40,6 +62,9 @@ class _PortfolioHomeState extends State<PortfolioHome> {
       mfCurrent = mCur;
       etfInvested = eInv;
       etfCurrent = eCur;
+      mfHoldings = mfList;
+      etfHoldings = etfList;
+      stockHoldings = stockList;
     });
   }
 
@@ -47,8 +72,8 @@ class _PortfolioHomeState extends State<PortfolioHome> {
   Widget build(BuildContext context) {
     final screens = [
       OverviewTab(stocksInvested, stocksCurrent, mfInvested, mfCurrent, etfInvested, etfCurrent),
-      SwingPolioTab(stocksInvested, stocksCurrent),
-      MfEtfTab(mfInvested, mfCurrent, etfInvested, etfCurrent),
+      SwingPolioTab(stocksInvested, stocksCurrent, stockHoldings),
+      MfEtfTab(mfInvested, mfCurrent, etfInvested, etfCurrent, mfHoldings, etfHoldings),
       ImporterTab(onImport: _importData),
     ];
 
@@ -99,35 +124,62 @@ class OverviewTab extends StatelessWidget {
 
 class SwingPolioTab extends StatelessWidget {
   final double invested, current;
-  const SwingPolioTab(this.invested, this.current, {super.key});
+  final List<StockHolding> stockHoldings;
+  const SwingPolioTab(this.invested, this.current, this.stockHoldings, {super.key});
+
   @override
-  Widget build(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(16),
-    children: [
-      Card(child: ListTile(title: const Text('Stocks Invested'), trailing: Text('₹$invested'))),
-      Card(child: ListTile(title: const Text('Stocks Current'), trailing: Text('₹$current'))),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final fyers = stockHoldings.where((h) => h.broker == 'Fyers').toList();
+    final zerodha = stockHoldings.where((h) => h.broker == 'Zerodha').toList();
+
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Card(child: ListTile(title: const Text('Stocks Total Invested'), trailing: Text('₹$invested'))),
+        Card(child: ListTile(title: const Text('Stocks Current'), trailing: Text('₹$current'))),
+        const SizedBox(height: 20),
+        const Text('Fyers Holdings', style: TextStyle(fontWeight: FontWeight.bold)),
+        ...fyers.map((h) => Card(
+          child: ListTile(title: Text(h.name), subtitle: Text('Invested ₹${h.invested}'), trailing: Text('₹${h.current}')),
+        )),
+        const SizedBox(height: 20),
+        const Text('Zerodha Holdings', style: TextStyle(fontWeight: FontWeight.bold)),
+        ...zerodha.map((h) => Card(
+          child: ListTile(title: Text(h.name), subtitle: Text('Invested ₹${h.invested}'), trailing: Text('₹${h.current}')),
+        )),
+      ],
+    );
+  }
 }
 
 class MfEtfTab extends StatelessWidget {
   final double mInv, mCur, eInv, eCur;
-  const MfEtfTab(this.mInv, this.mCur, this.eInv, this.eCur, {super.key});
+  final List<Holding> mfHoldings;
+  final List<Holding> etfHoldings;
+  const MfEtfTab(this.mInv, this.mCur, this.eInv, this.eCur, this.mfHoldings, this.etfHoldings, {super.key});
+
   @override
   Widget build(BuildContext context) => ListView(
     padding: const EdgeInsets.all(16),
     children: [
-      Card(child: ListTile(title: const Text('MF Invested'), trailing: Text('₹$mInv'))),
+      Card(child: ListTile(title: const Text('MF Total Invested'), trailing: Text('₹$mInv'))),
       Card(child: ListTile(title: const Text('MF Current'), trailing: Text('₹$mCur'))),
+      ...mfHoldings.map((h) => Card(
+        child: ListTile(title: Text(h.name), subtitle: Text('Invested ₹${h.invested}'), trailing: Text('₹${h.current}')),
+      )),
       const SizedBox(height: 10),
-      Card(child: ListTile(title: const Text('ETF Invested'), trailing: Text('₹$eInv'))),
+      Card(child: ListTile(title: const Text('ETF Total Invested'), trailing: Text('₹$eInv'))),
       Card(child: ListTile(title: const Text('ETF Current'), trailing: Text('₹$eCur'))),
+      ...etfHoldings.map((h) => Card(
+        child: ListTile(title: Text(h.name), subtitle: Text('Invested ₹${h.invested}'), trailing: Text('₹${h.current}')),
+      )),
     ],
   );
 }
 
+// --- Importer ---
 class ImporterTab extends StatelessWidget {
-  final Function(double,double,double,double,double,double) onImport;
+  final Function(double,double,double,double,double,double,List<Holding>,List<Holding>,List<StockHolding>) onImport;
   const ImporterTab({super.key, required this.onImport});
 
   Future<void> _pickFile(BuildContext context) async {
@@ -138,28 +190,76 @@ class ImporterTab extends StatelessWidget {
     if (result != null) {
       final file = File(result.files.single.path!);
       double sInv=0,sCur=0,mInv=0,mCur=0,eInv=0,eCur=0;
+      List<Holding> mfList = [];
+      List<Holding> etfList = [];
+      List<StockHolding> stockList = [];
+
       if (file.path.endsWith('.csv')) {
         final rows = const CsvToListConverter().convert(await file.readAsString());
-        for (var row in rows.skip(1)) {
-          if (row[0]=='stock'){ sInv+=row[1]; sCur+=row[2]; }
-          if (row[0]=='mf'){ mInv+=row[1]; mCur+=row[2]; }
-          if (row[0]=='etf'){ eInv+=row[1]; eCur+=row[2]; }
+        final header = rows.first.map((h) => h.toString().toLowerCase()).toList();
+
+        if (header.contains('name') && header.contains('invested value')) {
+          // Fyers format
+          for (var row in rows.skip(1)) {
+            final name = row[0].toString();
+            final invested = double.tryParse(row[3].toString().replaceAll(',','')) ?? 0;
+            final current = double.tryParse(row[4].toString().replaceAll(',','')) ?? 0;
+
+            if (name.toLowerCase().contains('fund')) {
+              mInv += invested; mCur += current;
+              mfList.add(Holding(name, invested, current));
+            } else if (name.toLowerCase().contains('etf')) {
+              eInv += invested; eCur += current;
+              etfList.add(Holding(name, invested, current));
+            } else {
+              sInv += invested; sCur += current;
+              stockList.add(StockHolding('Fyers', name, invested, current));
+            }
+          }
+        } else if (header.contains('instrument') && header.contains('cur. val')) {
+          // Zerodha format
+          for (var row in rows.skip(1)) {
+            final instrument = row[0].toString();
+            final invested = double.tryParse(row[4].toString()) ?? 0;
+            final current = double.tryParse(row[5].toString()) ?? 0;
+
+            if (instrument.toLowerCase().contains('fund')) {
+              mInv += invested; mCur += current;
+              mfList.add(Holding(instrument, invested, current));
+            } else if (instrument.toLowerCase().contains('bees') || instrument.toLowerCase().contains('etf')) {
+              eInv += invested; eCur += current;
+              etfList.add(Holding(instrument, invested, current));
+            } else {
+              sInv += invested; sCur += current;
+              stockList.add(StockHolding('Zerodha', instrument, invested, current));
+            }
+          }
         }
       } else if (file.path.endsWith('.xlsx')) {
+        // Excel parsing (generic fallback)
         final bytes = file.readAsBytesSync();
         final excel = Excel.decodeBytes(bytes);
         for (var table in excel.tables.keys) {
           for (var row in excel.tables[table]!.rows.skip(1)) {
-            final type = row[0]?.toString().toLowerCase();
-            final inv = double.tryParse(row[1]?.toString() ?? '0') ?? 0;
-            final cur = double.tryParse(row[2]?.toString() ?? '0') ?? 0;
-            if (type=='stock'){ sInv+=inv; sCur+=cur; }
-            if (type=='mf'){ mInv+=inv; mCur+=cur; }
-            if (type=='etf'){ eInv+=inv; eCur+=cur; }
+            final name = row[0]?.toString() ?? '';
+            final invested = double.tryParse(row[1]?.toString() ?? '0') ?? 0;
+            final current = double.tryParse(row[2]?.toString() ?? '0') ?? 0;
+
+            if (name.toLowerCase().contains('fund')) {
+              mInv += invested; mCur += current;
+              mfList.add(Holding(name, invested, current));
+            } else if (name.toLowerCase().contains('etf')) {
+              eInv += invested; eCur += current;
+              etfList.add(Holding(name, invested, current));
+            } else {
+              sInv += invested; sCur += current;
+              stockList.add(StockHolding('Excel', name, invested, current));
+            }
           }
         }
       }
-      onImport(sInv,sCur,mInv,mCur,eInv,eCur);
+
+      onImport(sInv,sCur,mInv,mCur,eInv,eCur,mfList,etfList,stockList);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Imported ${file.path}")));
     }
   }
