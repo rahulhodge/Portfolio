@@ -202,8 +202,8 @@ class ImporterTab extends StatelessWidget {
           // Fyers format
           for (var row in rows.skip(1)) {
             final name = row[0].toString();
-            final invested = double.tryParse(row[3].toString().replaceAll(',','')) ?? 0;
-            final current = double.tryParse(row[4].toString().replaceAll(',','')) ?? 0;
+            final invested = double.tryParse(row[4].toString().replaceAll(',','')) ?? 0;
+            final current = double.tryParse(row[5].toString().replaceAll(',','')) ?? 0;
 
             if (name.toLowerCase().contains('fund')) {
               mInv += invested; mCur += current;
@@ -220,8 +220,8 @@ class ImporterTab extends StatelessWidget {
           // Zerodha format
           for (var row in rows.skip(1)) {
             final instrument = row[0].toString();
-            final invested = double.tryParse(row[4].toString()) ?? 0;
-            final current = double.tryParse(row[5].toString()) ?? 0;
+            final invested = double.tryParse(row[5].toString()) ?? 0;
+            final current = double.tryParse(row[6].toString()) ?? 0;
 
             if (instrument.toLowerCase().contains('fund')) {
               mInv += invested; mCur += current;
